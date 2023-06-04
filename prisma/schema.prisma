@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id       String    @id @default(uuid())
+  email    String    @unique
+  username String?   @unique
+  avatar   String?
+  biodata  String?
+  createAt DateTime  @default(now())
+  role     Role      @default(USER)
+  post     Post[]    @relation("post")
+  Comment  Comment[] @relation("comment")
+  liked    Post[]    @relation("like")
+}
+
+model Post {
+  id        String    @id @default(uuid())
+  title     String
+  body      String?
+  source    String?
+  type      String?
+  published Boolean   @default(true)
+  sensitive Boolean   @default(false)
+  comment   Comment[]
+  createAt  DateTime  @default(now())
+  updateAt  DateTime  @updatedAt
+  user      User      @relation("post", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String
+  likeId    User[]    @relation("like")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  user      User     @relation("comment", fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    String
+  body      String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  postId    String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
